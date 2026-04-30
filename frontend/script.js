@@ -2,41 +2,27 @@ const focusScoreEl = document.getElementById("focusScore");
 const alertText = document.getElementById("alertText");
 const appUsageEl = document.getElementById("appUsage");
 
-let focusScore = 75;
+const API_URL = "https://present-real-omnipage--arunavabhol.replit.app/get_analysis";
 
-function updateUI() {
-focusScoreEl.innerText = focusScore + "%";
+function fetchData() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
 
-if (focusScore < 40) {
-alertText.innerText = "⚠️ Low focus detected. Take a break.";
-} else if (focusScore < 70) {
-alertText.innerText = "⚡ Moderate focus. Try deep work.";
-} else {
-alertText.innerText = "🔥 You're in peak productivity!";
+      focusScoreEl.innerText = data.focus_score + "%";
+      alertText.innerText = data.status;
+
+      appUsageEl.innerHTML = `
+        <li>VS Code - ${data.app_usage?.["VS Code"] || "N/A"}</li>
+        <li>Chrome - ${data.app_usage?.["Chrome"] || "N/A"}</li>
+        <li>YouTube - ${data.app_usage?.["YouTube"] || "N/A"}</li>
+      `;
+    })
+    .catch(err => {
+      alertText.innerText = "⚠️ Backend not reachable";
+      console.error(err);
+    });
 }
 
-appUsageEl.innerHTML = `     <li>VS Code - 2 hrs</li>     <li>Chrome - 1.5 hrs</li>     <li>YouTube - 45 mins</li>
-  `;
-}
-
-const ctx = document.getElementById("productivityChart").getContext("2d");
-
-new Chart(ctx, {
-type: "line",
-data: {
-labels: ["9AM", "10AM", "11AM", "12PM", "1PM"],
-datasets: [{
-label: "Focus %",
-data: [60, 70, 80, 50, 75],
-borderColor: "#38bdf8",
-fill: false
-}]
-}
-});
-
-setInterval(() => {
-focusScore = Math.floor(Math.random() * 100);
-updateUI();
-}, 3000);
-
-updateUI();
+setInterval(fetchData, 3000);
+fetchData();
